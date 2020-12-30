@@ -1,32 +1,19 @@
 import React from 'react';
-import { Card, CardImg, CardText, CardBody, CardTitle } from 'reactstrap';
-
+import { Card, CardImg, CardText, CardBody, CardTitle, Breadcrumb, BreadcrumbItem } from 'reactstrap';
+import { Link } from 'react-router-dom';
 
 function RenderDish({ dish }) {
     if (dish != null) {
         return (
-            <div className="container">
-                <div className="row">
-                    <div className="col-md-5 m-1">
-                        <Card>
-                            <CardImg width="100%" src={dish.image} alt={dish.name} />
-                            <CardBody>
-                                <CardTitle heading>{dish.name}</CardTitle>
-                                <CardText>
-                                    {dish.description}
-                                </CardText>
-                            </CardBody>
-                        </Card>
-                    </div>
-                    <div className="col-md-5 m-1">
-                        <CardTitle>
-                            Comments
-                            </CardTitle>
-                        <RenderComments comments={dish.comments} />
-                    </div>
-                </div>
-            </div>
-
+            <Card>
+                <CardImg width="100%" src={dish.image} alt={dish.name} />
+                <CardBody>
+                    <CardTitle heading>{dish.name}</CardTitle>
+                    <CardText>
+                        {dish.description}
+                    </CardText>
+                </CardBody>
+            </Card>
         )
     } else {
         return (
@@ -36,25 +23,39 @@ function RenderDish({ dish }) {
 }
 
 function RenderComments({ comments }) {
-    const memu = comments.map((ele) => {
-        return (
-            <div key={ele.id}>
-                <CardText>{ele.comment}</CardText>
-                <CardText>-- {ele.author}, {new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: '2-digit' }).format(new Date(Date.parse(ele.date)))}</CardText>
-            </div>
-        );
-    });
-
     return (
-        <div>
-            {memu}
-        </div>
+        <React.Fragment>
+            <CardTitle>
+                Comments
+            </CardTitle>
+            <div key={comments.id}>
+                <CardText>{comments.comment}</CardText>
+                <CardText>-- {comments.author}, {new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: '2-digit' }).format(new Date(Date.parse(comments.date)))}</CardText>
+            </div>
+        </React.Fragment>
     )
 }
 
 const DishDetail = (props) => {
     return (
-        <RenderDish dish={props.dish} />
+        <div className="container">
+            <div className="row">
+                <Breadcrumb>
+                    <BreadcrumbItem><Link to="/menu">Menu</Link></BreadcrumbItem>
+                    <BreadcrumbItem active>{props.dish.name}</BreadcrumbItem>
+                </Breadcrumb>
+                <div className="col-12">
+                    <h3>{props.dish.name}</h3>
+                    <hr />
+                </div>
+                <div className="col-md-5 m-1">
+                    <RenderDish dish={props.dish} />
+                </div>
+                <div className="col-md-5 m-1">
+                    <RenderComments comments={props.comments} />
+                </div>
+            </div>
+        </div>
     )
 }
 
