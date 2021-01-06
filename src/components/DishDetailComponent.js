@@ -5,6 +5,9 @@ import {
 } from 'reactstrap';
 import { Link } from 'react-router-dom';
 import { Control, LocalForm, Errors } from 'react-redux-form';
+import { Loading } from './LoadingComponent';
+import { FadeTransform, Fade, Stagger } from 'react-animation-components';
+import { baseUrl } from '../shared/baseUrl'
 
 const required = (val) => val && val.length;
 const maxLength = (len) => (val) => !(val) || (val.length <= len);
@@ -17,12 +20,18 @@ class CommentForm extends React.Component {
             isModalOpen: false,
         }
         this.renderComments = this.renderComments.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
     }
 
     renderComments() {
         this.setState({
             isModalOpen: !this.state.isModalOpen,
         })
+    }
+
+    handleSubmit(values) {
+        this.renderComments();
+        this.props.postComment(this.props.dishId, values.rating, values.author, values.comment);
     }
 
     render() {
@@ -51,9 +60,9 @@ class CommentForm extends React.Component {
                                 </Col>
                             </Row>
                             <Row className="form-group">
-                                <Label sm={12} htmlFor="name">Your Name</Label>
+                                <Label sm={12} htmlFor="author">Your Name</Label>
                                 <Col sm={12}>
-                                    <Control.text model=".name" id="name" name="name"
+                                    <Control.text model=".author" id="author" name="author"
                                         placeholder="Your Name"
                                         className="form-control"
                                         validators={{
@@ -61,7 +70,7 @@ class CommentForm extends React.Component {
                                         }}
                                     />
                                     <Errors className='text-danger'
-                                        model='.name'
+                                        model='.author'
                                         show="touched"
                                         messages={{
                                             minLength: "Must be greater than 2 characters",
@@ -95,15 +104,20 @@ class CommentForm extends React.Component {
 function RenderDish({ dish }) {
     if (dish != null) {
         return (
-            <Card>
-                <CardImg width="100%" src={dish.image} alt={dish.name} />
-                <CardBody>
-                    <CardTitle heading>{dish.name}</CardTitle>
-                    <CardText>
-                        {dish.description}
-                    </CardText>
-                </CardBody>
-            </Card>
+            <FadeTransform in
+                transformProps={{
+                    exitTransform: 'scale(0.5) translateY(-50%)'
+                }}>
+                <Card>
+                    <CardImg width="100%" src={baseUrl + dish.image} alt={dish.name} />
+                    <CardBody>
+                        <CardTitle heading>{dish.name}</CardTitle>
+                        <CardText>
+                            {dish.description}
+                        </CardText>
+                    </CardBody>
+                </Card>
+            </FadeTransform>
         )
     } else {
         return (
@@ -116,10 +130,12 @@ function RenderComments({ comments }) {
 
     const commentList = comments.map((comment) => {
         return (
-            <div key={comment.id}>
-                <CardText>{comment.comment}</CardText>
-                <CardText>-- {comment.author}, {new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: '2-digit' }).format(new Date(Date.parse(comment.date)))}</CardText>
-            </div>
+            <Fade in>
+                <div key={comment.id}>
+                    <p>{comment.comment}</p>
+                    <p>-- {comment.author}, {new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: '2-digit' }).format(new Date(Date.parse(comment.date)))}</p>
+                </div>
+            </Fade >
         )
     })
 
@@ -133,13 +149,32 @@ function RenderComments({ comments }) {
                 <CardText>-- {comments.author}, {new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: '2-digit' }).format(new Date(Date.parse(comments.date)))}</CardText>
             </div> */}
             <div className="mb-3">
-                {commentList}
+                <Stagger in>
+                    {commentList}
+                </Stagger>
             </div>
         </React.Fragment>
     )
 }
 
 const DishDetail = (props) => {
+    if (props.isLoading) {
+        return (
+            <div className="container">
+                <div className="row">
+                    <Loading />
+                </div>
+            </div>
+        )
+    } else if (props.errMess) {
+        return (
+            <div className="container">
+                <div className="row">
+                    <h4>{props.errMess}</h4>
+                </div>
+            </div>
+        )
+    }
     return (
         <div className="container">
             <div className="row">
@@ -156,7 +191,7 @@ const DishDetail = (props) => {
                 </div>
                 <div className="col-md-5 m-1">
                     <RenderComments comments={props.comments} />
-                    <CommentForm />
+                    <CommentForm dishId={props.dish.id} postComment={props.postComment} />
                 </div>
             </div>
         </div>
